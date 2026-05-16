@@ -31,9 +31,13 @@ export default function ReviewReport({ topicId, messages, isDynamic, finalScore,
           body: JSON.stringify({ messages, topicId, isReview: true })
         });
         const data = await res.json();
-        if (data.content) {
-          const m = data.content.match(/\{[\s\S]*\}/);
-          if (m) setReport(JSON.parse(m[0]));
+        if (data && (data.didWell || data.content)) {
+          if (data.didWell) {
+            setReport(data);
+          } else {
+            const m = data.content.match(/\{[\s\S]*\}/);
+            if (m) setReport(JSON.parse(m[0]));
+          }
         }
       } catch (e) { console.error(e); }
       finally { setIsLoading(false); }
