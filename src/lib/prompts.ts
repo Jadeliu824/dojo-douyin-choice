@@ -7,12 +7,12 @@ export const TOPICS = [
 
 export const SCENARIOS = {
   nvc: [
-    { id: 'partner_alone', title: '【视频案例】如何跟回避型伴侣沟通', opponent: '回避型伴侣', opponentTraits: ['习惯用「我最近很忙」来回避情感话题', '当被质疑时会反守为攻：「你怎么总是这样」', '表面平静，但会用沉默制造压力'] },
-    { id: 'friend_hurt', title: '【视频案例】当你感到受伤害时的表达', opponent: '防御型朋友', opponentTraits: ['认为你太敏感', '急于解释自己的动机而不是倾听'] },
+    { id: 'partner_alone', title: '【视频案例】如何跟回避型伴侣沟通', opponent: '回避型伴侣', opponentTraits: ['习惯用「我最近很忙」来回避情感话题', '当被质疑时会反守为攻：「你怎么总是这样」', '表面平静，但会用沉默制造压力'], knowledgePoints: ['观察 vs 评论', '表达感受', '具体请求'] },
+    { id: 'friend_hurt', title: '【视频案例】当你感到受伤害时的表达', opponent: '防御型朋友', opponentTraits: ['认为你太敏感', '急于解释自己的动机而不是倾听'], knowledgePoints: ['不带指责的坦诚', '关注自我需求'] },
   ],
   boundary: [
-    { id: 'coworker_task', title: '【实战拆解】拒绝职场道德绑架', opponent: '难缠的同事', opponentTraits: ['喜欢道德绑架', '总是强调这是「为了团队好」', '装可怜试图把活推给你'] },
-    { id: 'relative_privacy', title: '【实战拆解】应对长辈的隐私刺探', opponent: '缺乏边界感的长辈', opponentTraits: ['用「都是为你好」开头', '如果你不说就会一直追问'] },
+    { id: 'coworker_task', title: '【实战拆解】拒绝职场道德绑架', opponent: '难缠的同事', opponentTraits: ['喜欢道德绑架', '总是强调这是「为了团队好」', '装可怜试图把活推给你'], knowledgePoints: ['温和而坚定的拒绝', '事实驱动的边界设定'] },
+    { id: 'relative_privacy', title: '【实战拆解】应对长辈的隐私刺探', opponent: '缺乏边界感的长辈', opponentTraits: ['用「都是为你好」开头', '如果你不说就会一直追问'], knowledgePoints: ['情感隔离', '转移话题技巧'] },
   ],
 };
 

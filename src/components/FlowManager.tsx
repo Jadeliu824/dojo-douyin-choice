@@ -76,9 +76,9 @@ export default function FlowManager() {
           <ChatInterface
             topicTitle={currentTopic.title}
             scenarioTitle={currentScenario.title}
-            opponentRole={currentScenario.opponent}
-            opponentTraits={currentScenario.opponentTraits}
-            knowledgePoints={currentScenario.knowledgePoints}
+            opponentRole={(currentScenario as any).opponent}
+            opponentTraits={(currentScenario as any).opponentTraits}
+            knowledgePoints={(currentScenario as any).knowledgePoints}
             onBack={() => setState('scenario')}
             onFinished={(msgs, score) => { setHistory(msgs); setFinalScore(score); setState('review'); }}
           />
@@ -90,7 +90,7 @@ export default function FlowManager() {
             messages={history}
             isDynamic={!!dynScenario}
             finalScore={finalScore}
-            knowledgePoints={currentScenario?.knowledgePoints}
+            knowledgePoints={(currentScenario as any)?.knowledgePoints}
             onRestart={() => { setHistory([]); setState('chat'); }}
             onChangeScenario={() => setState('topic')}
           />
