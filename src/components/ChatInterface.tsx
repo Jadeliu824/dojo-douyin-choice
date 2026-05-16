@@ -32,6 +32,41 @@ export default function ChatInterface({
   const scrollRef = useRef<HTMLDivElement>(null);
   const isComplete = softnessScore >= 90 || softnessScore <= 10 || isForcedFinished;
 
+  // Make opponent speak first
+  useEffect(() => {
+    if (messages.length === 0 && !isTyping) {
+      handleSendInitial();
+    }
+  }, []);
+
+  const handleSendInitial = async () => {
+    setIsTyping(true);
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [],
+          topicTitle,
+          scenarioTitle,
+          opponentRole,
+          opponentTraits,
+          knowledgePoints,
+          currentScore: softnessScore,
+          turnCount: 0
+        })
+      });
+      const data = await res.json();
+      if (data.content) {
+        setMessages([{ role: 'assistant', content: data.content }]);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsTyping(false);
+    }
+  };
+
   useEffect(() => {
     scrollRef.current?.scrollTo(0, scrollRef.current.scrollHeight);
   }, [messages, isTyping]);
@@ -137,10 +172,9 @@ export default function ChatInterface({
 
       {/* Messages */}
       <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', padding: '20px 16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        {messages.length === 0 && (
+        {messages.length === 0 && isTyping && (
           <div style={{ textAlign: 'center', padding: '40px 20px', color: '#6B6B6B' }}>
-            <div style={{ fontSize: '14px', fontWeight: '600', marginBottom: '8px' }}>场景已加载</div>
-            <div style={{ fontSize: '13px', opacity: 0.7 }}>请说第一句话开始对话吧</div>
+            <div style={{ fontSize: '14px', fontWeight: '600', marginBottom: '8px' }}>对方正在进入场景...</div>
           </div>
         )}
 
@@ -160,7 +194,7 @@ export default function ChatInterface({
           </div>
         ))}
 
-        {isTyping && (
+        {isTyping && messages.length > 0 && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 16px', borderRadius: '18px', background: '#E8D8FF', alignSelf: 'flex-start', borderBottomLeftRadius: '4px' }}>
             <div className="dot-bounce" style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#9B7BC0' }} />
             <div className="dot-bounce" style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#9B7BC0', animationDelay: '0.2s' }} />
