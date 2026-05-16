@@ -27,9 +27,10 @@ export default function ChatInterface({
   const [isTyping, setIsTyping] = useState(false);
   const [softnessScore, setSoftnessScore] = useState(50);
   const [scoreDiff, setScoreDiff] = useState<number | null>(null);
+  const [isForcedFinished, setIsForcedFinished] = useState(false);
   
   const scrollRef = useRef<HTMLDivElement>(null);
-  const isComplete = softnessScore >= 90 || softnessScore <= 10;
+  const isComplete = softnessScore >= 90 || softnessScore <= 10 || isForcedFinished;
 
   useEffect(() => {
     scrollRef.current?.scrollTo(0, scrollRef.current.scrollHeight);
@@ -72,8 +73,7 @@ export default function ChatInterface({
         setSoftnessScore(newScore);
       }
       if (data.isFinished) {
-        // If AI says finished, we force the score to a boundary to trigger isComplete
-        setSoftnessScore(data.softnessScore >= 50 ? 95 : 5);
+        setIsForcedFinished(true);
       }
     } catch (e) {
       console.error(e);
@@ -102,7 +102,16 @@ export default function ChatInterface({
             <div style={{ fontSize: '15px', fontWeight: '800', color: '#111' }}>{opponentRole || '实战对练'}</div>
           </div>
 
-          <div style={{ width: '40px' }} />
+          <div style={{ width: '40px' }}>
+            {!isComplete && messages.filter(m => m.role === 'user').length >= 3 && (
+              <button 
+                onClick={() => setIsForcedFinished(true)}
+                style={{ background: 'rgba(0,0,0,0.05)', border: 'none', padding: '6px 10px', borderRadius: '10px', fontSize: '11px', fontWeight: '800', color: '#6B6B6B', cursor: 'pointer' }}
+              >
+                结束
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Progress Bar & Stats */}

@@ -39,9 +39,10 @@ ${knowledgePoints && knowledgePoints.length > 0 ? `- 核心转化能力：${know
    - 只要 isFinished 为 true，请给出一句明确的终结语。
 
 【输出要求】：
-你必须严格返回 JSON 格式，不要包含任何其他文字、标记或说明。只输出 JSON。
-1. **content 字段内容必须纯净**：只包含你扮演的角色说的话。绝对禁止在 content 中包含分数、态度说明、括号注释或任何关于内部逻辑的描述。
-2. 格式如下：
+你必须严格返回纯 JSON 格式，禁止包含任何 Markdown 标记（如 \`\`\`json）、说明或多余文字。
+1. **content 字段必须纯净**：只包含角色对话。严禁包含任何关于分数、态度分、isFinished 状态或教练点评的文字。
+2. 严禁在 content 中使用括号注释或元数据。
+3. 格式必须完全符合：
 {
   "content": "角色说的话",
   "softnessScore": 0-100,

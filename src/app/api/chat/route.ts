@@ -49,54 +49,53 @@ export async function POST(request: Request) {
     });
 
     let replyContent = (response.choices[0].message.content || '').trim();
-    console.log('OpenAI Raw Response:', `[${replyContent}]`);
-
-    // Extract JSON using regex (robust to markdown or extra text)
-    const jsonMatch = replyContent.match(/\{[\s\S]*\}/);
+    
+    // Normalize Chinese brackets to prevent regex failure
+    const normalizedContent = replyContent.replace(/（/g, '(').replace(/）/g, ')');
+    
+    // Extract JSON using regex
+    const jsonMatch = normalizedContent.match(/\{[\s\S]*\}/);
+    
     if (!jsonMatch) {
-      console.warn('No JSON found in response, using raw content as fallback');
+      // If no JSON, check if it's just a raw message
       if (!isReview && replyContent.length > 0) {
+        // Try to strip anything that looks like (softnessScore: ...)
+        const cleaned = replyContent.replace(/\(softnessScore:.*?\)/gi, '').replace(/\(isFinished:.*?\)/gi, '').trim();
         return NextResponse.json({
-          content: replyContent,
+          content: cleaned || "（对方陷入了沉默...）",
           softnessScore: fallbackScore,
           isFinished: false,
-          feedback: "Manual extraction fallback"
+          feedback: "Fallback cleanup"
         });
       }
 
       return NextResponse.json({
-        content: "（对方沉默了片刻，似乎在思考该如何回应...）",
+        content: "（对方沉默了片刻...）",
         softnessScore: fallbackScore,
-        isFinished: false,
-        feedback: "AI returned non-JSON and was empty"
+        isFinished: false
       });
     }
 
     try {
       const parsedReply = JSON.parse(jsonMatch[0]);
       
-      // Handle the case where the model returns an array or different structure
-      const finalContent = parsedReply.content || (Array.isArray(parsedReply) ? parsedReply[0]?.content : null);
-      
-      if (!finalContent && !isReview) {
-         return NextResponse.json({
-          content: "（对方陷入了沉默...）",
-          softnessScore: fallbackScore,
-          isFinished: false
-        });
+      // Ensure content is not leaked metadata
+      if (parsedReply.content) {
+        parsedReply.content = parsedReply.content
+          .replace(/\(softnessScore:.*?\)/gi, '')
+          .replace(/\(isFinished:.*?\)/gi, '')
+          .trim();
       }
 
       return NextResponse.json(parsedReply);
     } catch (parseError) {
-      console.error('JSON Parse Error:', parseError, 'Extracted text:', jsonMatch[0]);
-      if (!isReview) {
-        return NextResponse.json({
-          content: jsonMatch[0].length > 10 ? jsonMatch[0].substring(0, 500) : "（对方似乎不知道该说什么...）",
-          softnessScore: fallbackScore,
-          isFinished: false
-        });
-      }
-      throw parseError;
+      // Final fallback if JSON is malformed
+      const rawText = replyContent.split('{')[0].trim();
+      return NextResponse.json({
+        content: rawText || "（对方似乎不知道该说什么...）",
+        softnessScore: fallbackScore,
+        isFinished: false
+      });
     }
 
   } catch (error: any) {

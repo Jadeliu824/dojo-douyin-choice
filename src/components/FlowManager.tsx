@@ -48,7 +48,7 @@ export default function FlowManager() {
             <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#9FE050' }} />
           </div>
         </div>
-        <p style={{ fontSize: '14px', color: '#6B6B6B', fontWeight: '600', margin: 0 }}>内容重构：从“看过”到“练过”</p>
+        <p style={{ fontSize: '14px', color: '#6B6B6B', fontWeight: '600', margin: 0 }}>内容重构：开口才算学会</p>
       </header>
 
       {/* Main Content Area */}
