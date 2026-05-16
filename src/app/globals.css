@@ -1,0 +1,52 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+:root {
+  --bg: #FFFFFF;
+  --bg-muted: #F7F7F9;
+  --green: #9FE050;
+  --green-dark: #3A7000;
+  --text: #111111;
+  --text-2: #6B6B6B;
+  --text-3: #ADADAD;
+  --blue: #4A9EFF;
+  --red: #FF6B6B;
+  --orange: #FF9F4A;
+  --lavender: #E8D8FF;
+  --peach: #FFE4C8;
+  --mint: #C2F0E8;
+  --pink: #FFD6E7;
+  --sky: #C8E6FF;
+  --lime: #D4F5A2;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+button, textarea, input { font-family: inherit; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  background: #FFFFFF;
+  color: #111;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  font-size: 15px;
+  line-height: 1.45;
+}
+.container { max-width: 540px; margin: 0 auto; min-height: 100vh; background: #FFF; }
+.animate-fade-in { animation: fadeIn 0.3s cubic-bezier(0.4,0,0.2,1) both; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes dotBounce {
+  0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+  40%            { transform: translateY(-6px); opacity: 1; }
+}
+.loader { width:22px; height:22px; border:2.5px solid rgba(0,0,0,0.08); border-top-color:#9FE050; border-radius:50%; animation:spin 0.8s linear infinite; }
+/* compat */
+.ios-card { background:#FFF; border-radius:20px; border:1.5px solid rgba(0,0,0,0.06); padding:20px; margin:0 16px 12px; }
+.ios-list-group { background:#FFF; border-radius:20px; border:1.5px solid rgba(0,0,0,0.06); margin:0 16px 12px; overflow:hidden; }
+.ios-list-item { display:flex; align-items:center; padding:14px 16px; border-bottom:1.5px solid rgba(0,0,0,0.05); }
+.ios-list-item:last-child { border-bottom:none; }
+.ios-headline { font-size:17px; font-weight:700; color:#111; }
+.ios-subheadline { font-size:14px; color:#6B6B6B; }
+.ios-caption { font-size:11px; font-weight:700; letter-spacing:0.8px; text-transform:uppercase; color:#ADADAD; padding:0 20px; margin-bottom:8px; }
+.ios-button { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:15px; border-radius:99px; font-size:16px; font-weight:700; border:none; cursor:pointer; transition:opacity 0.15s; }
+.ios-button:active { opacity:0.8; }
+.ios-button-primary { background:#9FE050; color:#2B5200; }
+.ios-button-secondary { background:rgba(0,0,0,0.05); color:#6B6B6B; }
+.gradient-text { color:#111; }
