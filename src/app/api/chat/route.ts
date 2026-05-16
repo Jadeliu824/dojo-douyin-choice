@@ -6,8 +6,8 @@ function getClient() {
   return new OpenAI({
     baseURL: 'https://api.deepseek.com',
     apiKey: process.env.DEEPSEEK_API_KEY || 'sk-placeholder-for-build',
-    maxRetries: 3,
-    timeout: 60000,
+    maxRetries: 1,
+    timeout: 30000,
   });
 }
 
@@ -18,6 +18,13 @@ export async function POST(request: Request) {
 
     if (!messages || !Array.isArray(messages)) {
       return NextResponse.json({ error: 'Messages are required' }, { status: 400 });
+    }
+
+    // Check for missing API Key early
+    if (!process.env.DEEPSEEK_API_KEY || process.env.DEEPSEEK_API_KEY === 'sk-placeholder-for-build') {
+       return NextResponse.json({ 
+        content: '（检测到 DEEPSEEK_API_KEY 未配置。请在 Vercel 项目设置的 Environment Variables 中添加该 Key 并重新部署）' 
+      });
     }
 
     const fallbackScore = body.currentScore || 30;
@@ -57,9 +64,7 @@ export async function POST(request: Request) {
     const jsonMatch = normalizedContent.match(/\{[\s\S]*\}/);
     
     if (!jsonMatch) {
-      // If no JSON, check if it's just a raw message
       if (!isReview && replyContent.length > 0) {
-        // Try to strip anything that looks like (softnessScore: ...)
         const cleaned = replyContent.replace(/\(softnessScore:.*?\)/gi, '').replace(/\(isFinished:.*?\)/gi, '').trim();
         return NextResponse.json({
           content: cleaned || "（对方陷入了沉默...）",
@@ -78,18 +83,14 @@ export async function POST(request: Request) {
 
     try {
       const parsedReply = JSON.parse(jsonMatch[0]);
-      
-      // Ensure content is not leaked metadata
       if (parsedReply.content) {
         parsedReply.content = parsedReply.content
           .replace(/\(softnessScore:.*?\)/gi, '')
           .replace(/\(isFinished:.*?\)/gi, '')
           .trim();
       }
-
       return NextResponse.json(parsedReply);
     } catch (parseError) {
-      // Final fallback if JSON is malformed
       const rawText = replyContent.split('{')[0].trim();
       return NextResponse.json({
         content: rawText || "（对方似乎不知道该说什么...）",
@@ -100,9 +101,20 @@ export async function POST(request: Request) {
 
   } catch (error: any) {
     console.error('Chat API Error:', error);
+    const errorStatus = error.status || 500;
+    let errorMsg = '（系统连接不稳定，对方暂时没有回应，请重试）';
+
+    if (errorStatus === 401) {
+      errorMsg = '（API Key 无效，请检查 Vercel 环境变量配置）';
+    } else if (errorStatus === 429) {
+      errorMsg = '（API 调用频率过高，请稍后再试）';
+    } else if (error.name === 'AbortError' || error.message?.includes('timeout')) {
+      errorMsg = '（请求超时，AI 响应较慢，请刷新页面重试）';
+    }
+
     return NextResponse.json({ 
       error: '消息处理失败', 
-      content: '（系统连接不稳定，对方暂时没有回应，请尝试刷新页面或重试）' 
-    }, { status: 500 });
+      content: errorMsg 
+    }, { status: errorStatus });
   }
 }
