@@ -126,22 +126,26 @@ export default function ChatInterface({
       {/* Header */}
       <div style={{ background: '#FFF', borderBottom: '1.5px solid rgba(0,0,0,0.06)', padding: '12px 16px 12px', zIndex: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-          <button onClick={onBack} style={{ background: 'none', border: 'none', padding: '4px', cursor: 'pointer' }}>
-            <ChevronLeft size={24} color="#111" />
-          </button>
+          <div style={{ width: '60px', display: 'flex', alignItems: 'center' }}>
+            <button onClick={onBack} style={{ background: 'none', border: 'none', padding: '4px', cursor: 'pointer' }}>
+              <ChevronLeft size={24} color="#111" />
+            </button>
+          </div>
           
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, justifyContent: 'center' }}>
             <div style={{ width: '32px', height: '32px', borderRadius: '10px', background: '#E8D8FF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Bot size={18} color="#9B7BC0" />
             </div>
-            <div style={{ fontSize: '15px', fontWeight: '800', color: '#111' }}>{opponentRole || '实战对练'}</div>
+            <div style={{ fontSize: '15px', fontWeight: '800', color: '#111', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {opponentRole || '实战对练'}
+            </div>
           </div>
-
-          <div style={{ width: '40px' }}>
-            {!isComplete && messages.filter(m => m.role === 'user').length >= 3 && (
+          
+          <div style={{ width: '60px', display: 'flex', justifyContent: 'flex-end' }}>
+            {!isComplete && messages.filter(m => m.role === 'user').length >= 1 && (
               <button 
                 onClick={() => setIsForcedFinished(true)}
-                style={{ background: 'rgba(0,0,0,0.05)', border: 'none', padding: '6px 10px', borderRadius: '10px', fontSize: '11px', fontWeight: '800', color: '#6B6B6B', cursor: 'pointer' }}
+                style={{ background: 'rgba(0,0,0,0.08)', border: '1px solid rgba(0,0,0,0.05)', padding: '6px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: '800', color: '#111', cursor: 'pointer', whiteSpace: 'nowrap' }}
               >
                 结束
               </button>
