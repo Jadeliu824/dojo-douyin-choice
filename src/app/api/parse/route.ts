@@ -1,10 +1,12 @@
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 
-const openai = new OpenAI({
-  apiKey: process.env.DEEPSEEK_API_KEY,
-  baseURL: 'https://api.deepseek.com',
-});
+function getClient() {
+  return new OpenAI({
+    apiKey: process.env.DEEPSEEK_API_KEY,
+    baseURL: 'https://api.deepseek.com',
+  });
+}
 
 const MOBILE_UA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1';
 
@@ -55,7 +57,7 @@ export async function POST(req: Request) {
 
     const userPrompt = `待分析内容：\n${scrapedContent}`;
 
-    const response = await openai.chat.completions.create({
+    const response = await getClient().chat.completions.create({
       model: 'deepseek-chat',
       messages: [
         { role: 'system', content: systemPrompt },

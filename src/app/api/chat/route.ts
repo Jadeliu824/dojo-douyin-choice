@@ -2,12 +2,14 @@ import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { getSystemPrompt, getReviewPrompt } from '@/lib/prompts';
 
-const openai = new OpenAI({
-  baseURL: 'https://api.deepseek.com',
-  apiKey: process.env.DEEPSEEK_API_KEY,
-  maxRetries: 3,
-  timeout: 60000, // 60s timeout
-});
+function getClient() {
+  return new OpenAI({
+    baseURL: 'https://api.deepseek.com',
+    apiKey: process.env.DEEPSEEK_API_KEY,
+    maxRetries: 3,
+    timeout: 60000,
+  });
+}
 
 export async function POST(request: Request) {
   try {
@@ -34,7 +36,7 @@ export async function POST(request: Request) {
       }
     }
 
-    const response = await openai.chat.completions.create({
+    const response = await getClient().chat.completions.create({
       model: 'deepseek-chat',
       temperature: isReview ? 0.2 : 0.7,
       messages: [
