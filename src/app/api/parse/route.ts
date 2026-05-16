@@ -3,7 +3,7 @@ import OpenAI from 'openai';
 
 function getClient() {
   return new OpenAI({
-    apiKey: process.env.DEEPSEEK_API_KEY,
+    apiKey: process.env.DEEPSEEK_API_KEY || 'sk-placeholder-for-build',
     baseURL: 'https://api.deepseek.com',
   });
 }

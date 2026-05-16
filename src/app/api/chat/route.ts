@@ -5,7 +5,7 @@ import { getSystemPrompt, getReviewPrompt } from '@/lib/prompts';
 function getClient() {
   return new OpenAI({
     baseURL: 'https://api.deepseek.com',
-    apiKey: process.env.DEEPSEEK_API_KEY,
+    apiKey: process.env.DEEPSEEK_API_KEY || 'sk-placeholder-for-build',
     maxRetries: 3,
     timeout: 60000,
   });
