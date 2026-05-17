@@ -14,24 +14,27 @@ interface ChatInterfaceProps {
   opponentRole: string;
   opponentTraits: string[];
   knowledgePoints?: string[];
+  initialPressure?: number;
   onBack: () => void;
-  onFinished: (history: Message[], finalScore: number) => void;
+  onFinished: (history: Message[], finalScore: number, metadata: { initialPressure: number; turnCount: number; lowestScore: number }) => void;
 }
 
-export default function ChatInterface({ 
-  topicTitle, scenarioTitle, opponentRole, opponentTraits, knowledgePoints, 
-  onBack, onFinished 
+export default function ChatInterface({
+  topicTitle, scenarioTitle, opponentRole, opponentTraits, knowledgePoints, initialPressure = 5,
+  onBack, onFinished
 }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [softnessScore, setSoftnessScore] = useState(50);
+  const [lowestScore, setLowestScore] = useState(50);
   const [scoreDiff, setScoreDiff] = useState<number | null>(null);
   const [isForcedFinished, setIsForcedFinished] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isShaking, setIsShaking] = useState(false);
   const recognitionRef = useRef<any>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
+  const turnCountRef = useRef(0);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const isComplete = softnessScore >= 90 || softnessScore <= 10 || isForcedFinished;
@@ -217,6 +220,8 @@ export default function ChatInterface({
         const diff = newScore - softnessScore;
         handleScoreChange(diff);
         setSoftnessScore(newScore);
+        if (newScore < lowestScore) setLowestScore(newScore);
+        turnCountRef.current += 1;
       }
       if (data.isFinished) {
         setIsForcedFinished(true);
@@ -231,6 +236,27 @@ export default function ChatInterface({
 
   const barColor = softnessScore > 80 ? '#9FE050' : softnessScore < 30 ? '#FF6B6B' : '#4A9EFF';
 
+  /* ── Visual Mood Avatar ── */
+  const getOpponentEmoji = (): string => {
+    const role = opponentRole.toLowerCase();
+    if (role.includes('伴侣') || role.includes('伴侣')) return '😒';
+    if (role.includes('朋友')) return '😤';
+    if (role.includes('同事') || role.includes('老板') || role.includes('经理')) return '😏';
+    if (role.includes('长辈') || role.includes('亲戚') || role.includes('父母') || role.includes('妈')) return '😐';
+    if (role.includes('客户') || role.includes('房东') || role.includes('领导')) return '😠';
+    if (role.includes('伴侣') || role.includes('对象') || role.includes('爱人')) return '😑';
+    return '🤖';
+  };
+
+  const getMoodState = () => {
+    if (softnessScore > 80) return { emoji: '😊', label: '满意', bg: '#D4F5A2', border: '#9FE050', iconColor: '#3A7000' };
+    if (softnessScore > 50) return { emoji: '🙂', label: '缓和', bg: '#E8D8FF', border: '#D0B0F0', iconColor: '#9B7BC0' };
+    if (softnessScore > 25) return { emoji: '😐', label: '紧绷', bg: '#FFE4C8', border: '#FFCC99', iconColor: '#CC7700' };
+    return { emoji: '😠', label: '愤怒', bg: '#FFD6D6', border: '#FF9999', iconColor: '#CC0000' };
+  };
+
+  const mood = getMoodState();
+
   return (
     <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', height: '100dvh', background: '#F7F7F9' }}>
       
@@ -243,12 +269,30 @@ export default function ChatInterface({
             </button>
           </div>
           
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, justifyContent: 'center' }}>
-            <div style={{ width: '32px', height: '32px', borderRadius: '10px', background: '#E8D8FF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Bot size={18} color="#9B7BC0" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, justifyContent: 'center' }}>
+            <div style={{
+              width: '40px', height: '40px', borderRadius: '14px',
+              background: mood.bg, border: `2px solid ${mood.border}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0, transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
+              transform: scoreDiff !== null && scoreDiff > 0 ? 'scale(1.1)' : scoreDiff !== null && scoreDiff < 0 ? 'scale(0.95)' : 'scale(1)',
+            }}>
+              <span style={{ fontSize: '20px', lineHeight: 1 }}>{getOpponentEmoji()}</span>
             </div>
-            <div style={{ fontSize: '15px', fontWeight: '800', color: '#111', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {opponentRole || '实战对练'}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '1px' }}>
+              <div style={{ fontSize: '15px', fontWeight: '800', color: '#111', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {opponentRole || '实战对练'}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ fontSize: '11px', fontWeight: '700', color: mood.iconColor, transition: 'color 0.3s' }}>
+                  {mood.emoji} {mood.label}
+                </span>
+                {initialPressure >= 8 && (
+                  <span style={{ fontSize: '10px', fontWeight: '800', color: '#CC0000' }}>
+                    · {initialPressure === 10 ? '🔱 地狱' : '👹 地狱'}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
           
@@ -322,7 +366,7 @@ export default function ChatInterface({
       <div style={{ padding: '16px', background: '#FFF', borderTop: '1.5px solid rgba(0,0,0,0.06)' }}>
         {isComplete ? (
           <button
-            onClick={() => onFinished(messages, softnessScore)}
+            onClick={() => onFinished(messages, softnessScore, { initialPressure, turnCount: turnCountRef.current, lowestScore })}
             style={{ width: '100%', padding: '16px', borderRadius: '99px', border: 'none', background: '#9FE050', color: '#2B5200', fontSize: '16px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
           >
             完成对练，查看复盘报告 <ArrowRight size={20} />
