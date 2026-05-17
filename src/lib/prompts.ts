@@ -7,12 +7,14 @@ export const TOPICS = [
 
 export const SCENARIOS = {
   nvc: [
-    { id: 'partner_alone', title: '【视频案例】如何跟回避型伴侣沟通', opponent: '回避型伴侣', opponentTraits: ['习惯用「我最近很忙」来回避情感话题', '当被质疑时会反守为攻：「你怎么总是这样」', '表面平静，但会用沉默制造压力'], knowledgePoints: ['观察 vs 评论', '表达感受', '具体请求'] },
-    { id: 'friend_hurt', title: '【视频案例】当你感到受伤害时的表达', opponent: '防御型朋友', opponentTraits: ['认为你太敏感', '急于解释自己的动机而不是倾听'], knowledgePoints: ['不带指责的坦诚', '关注自我需求'] },
+    { id: 'partner_alone', title: '【视频案例】如何跟回避型伴侣沟通', opponent: '回避型伴侣', initialPressure: 6, difficulty: '进阶', opponentTraits: ['习惯用「我最近很忙」来回避情感话题', '当被质疑时会反守为攻：「你怎么总是这样」', '表面平静，但会用沉默制造压力'], knowledgePoints: ['观察 vs 评论', '表达感受', '具体请求'] },
+    { id: 'friend_hurt', title: '【视频案例】当你感到受伤害时的表达', opponent: '防御型朋友', initialPressure: 5, difficulty: '进阶', opponentTraits: ['认为你太敏感', '急于解释自己的动机而不是倾听'], knowledgePoints: ['不带指责的坦诚', '关注自我需求'] },
+    { id: 'empathy_hell', title: '【地狱试炼】面对彻底封闭的伴侣', opponent: '彻底封闭的伴侣', initialPressure: 10, difficulty: '地狱', opponentTraits: ['全程沉默，只用冷笑和转身回应你', '偶尔抛出「随便你怎么想」', '用彻底的冷漠测试你的情绪稳定性', '如果你情绪失控，她会直接离开'], knowledgePoints: ['非暴力沟通高阶', '情绪自我调节', '在沉默中保持存在感'] },
   ],
   boundary: [
-    { id: 'coworker_task', title: '【实战拆解】拒绝职场道德绑架', opponent: '难缠的同事', opponentTraits: ['喜欢道德绑架', '总是强调这是「为了团队好」', '装可怜试图把活推给你'], knowledgePoints: ['温和而坚定的拒绝', '事实驱动的边界设定'] },
-    { id: 'relative_privacy', title: '【实战拆解】应对长辈的隐私刺探', opponent: '缺乏边界感的长辈', opponentTraits: ['用「都是为你好」开头', '如果你不说就会一直追问'], knowledgePoints: ['情感隔离', '转移话题技巧'] },
+    { id: 'coworker_task', title: '【实战拆解】拒绝职场道德绑架', opponent: '难缠的同事', initialPressure: 7, difficulty: '进阶', opponentTraits: ['喜欢道德绑架', '总是强调这是「为了团队好」', '装可怜试图把活推给你'], knowledgePoints: ['温和而坚定的拒绝', '事实驱动的边界设定'] },
+    { id: 'relative_privacy', title: '【实战拆解】应对长辈的隐私刺探', opponent: '缺乏边界感的长辈', initialPressure: 4, difficulty: '初级', opponentTraits: ['用「都是为你好」开头', '如果你不说就会一直追问'], knowledgePoints: ['情感隔离', '转移话题技巧'] },
+    { id: 'setup_hell', title: '【地狱试炼】被当众羞辱的边界反击', opponent: '挑衅型同事', initialPressure: 9, difficulty: '地狱', opponentTraits: ['当着全会议室的人否定你的工作成果', '用「我不是针对你，但…」包装攻击', '不断打断你的解释', '试图拉拢其他人站队'], knowledgePoints: ['在压力下设定边界', '非防御性回应', '公共场合的情绪管理'] },
   ],
 };
 

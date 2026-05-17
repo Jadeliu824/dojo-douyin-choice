@@ -7,6 +7,8 @@ export interface DynamicScenario {
   opponentRole: string;
   opponentTraits: string[];
   knowledgePoints: string[];
+  initialPressure: number;
+  difficulty?: string;
 }
 
 interface Props {
@@ -40,15 +42,26 @@ export default function DynamicScenarioConfirm({ scenario, onAccept, onCancel }:
         border: '1.5px solid rgba(0,0,0,0.06)',
         padding: '24px 20px', marginBottom: '16px'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-          <div style={{ 
-            padding: '4px 12px', borderRadius: '99px', 
-            background: '#D4F5A2', color: '#3A7000', 
-            fontSize: '11px', fontWeight: '800', 
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
+          <div style={{
+            padding: '4px 12px', borderRadius: '99px',
+            background: '#D4F5A2', color: '#3A7000',
+            fontSize: '11px', fontWeight: '800',
             textTransform: 'uppercase', letterSpacing: '0.5px'
           }}>
             视频内容重构
           </div>
+          {scenario.initialPressure >= 8 && (
+            <div style={{
+              padding: '4px 12px', borderRadius: '99px',
+              background: scenario.initialPressure === 10 ? '#FFD6D6' : '#FFE4C8',
+              color: scenario.initialPressure === 10 ? '#CC0000' : '#8A4500',
+              fontSize: '11px', fontWeight: '800',
+              letterSpacing: '0.3px'
+            }}>
+              {scenario.initialPressure === 10 ? '🔱 地狱级' : scenario.initialPressure >= 9 ? '👹 地狱级' : scenario.difficulty || '高难度'} · 压力值 {scenario.initialPressure}
+            </div>
+          )}
         </div>
 
         <h2 style={{ fontSize: '24px', fontWeight: '900', color: '#111', lineHeight: 1.25, marginBottom: '12px' }}>

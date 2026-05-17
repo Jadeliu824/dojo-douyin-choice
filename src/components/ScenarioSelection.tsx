@@ -8,10 +8,11 @@ interface ScenarioSelectionProps {
   onBack: () => void;
 }
 
-const DIFF_STYLES = [
-  { label: '初级', bg: '#D4F5A2', color: '#3A7000' },
-  { label: '进阶', bg: '#FFE4C8', color: '#8A4500' },
-];
+const DIFF_STYLES: Record<string, {bg: string; color: string}> = {
+  '初级': { bg: '#D4F5A2', color: '#3A7000' },
+  '进阶': { bg: '#FFE4C8', color: '#8A4500' },
+  '地狱': { bg: '#FFD6D6', color: '#CC0000' },
+};
 
 export default function ScenarioSelection({ topicId, onSelect, onBack }: ScenarioSelectionProps) {
   const scenarios = SCENARIOS[topicId as keyof typeof SCENARIOS] || [];
@@ -47,8 +48,8 @@ export default function ScenarioSelection({ topicId, onSelect, onBack }: Scenari
 
       {/* Scenario cards */}
       <div style={{ padding: '16px 16px 0', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        {scenarios.map((scenario, idx) => {
-          const diff = DIFF_STYLES[idx % DIFF_STYLES.length];
+        {scenarios.map((scenario: any) => {
+          const diffStyle = DIFF_STYLES[scenario.difficulty] || DIFF_STYLES['初级'];
           return (
             <div
               key={scenario.id}
@@ -85,10 +86,10 @@ export default function ScenarioSelection({ topicId, onSelect, onBack }: Scenari
 
               {/* Tags */}
               <div style={{ display: 'flex', gap: '8px', marginTop: '12px', flexWrap: 'wrap' }}>
-                <span style={{ padding: '4px 12px', borderRadius: '99px', fontSize: '12px', fontWeight: '700', background: diff.bg, color: diff.color }}>
-                  {diff.label}
+                <span style={{ padding: '4px 12px', borderRadius: '99px', fontSize: '12px', fontWeight: '700', background: diffStyle.bg, color: diffStyle.color }}>
+                  {scenario.difficulty || '初级'}
                 </span>
-                {scenario.opponentTraits.slice(0, 2).map((t, i) => (
+                {scenario.opponentTraits.slice(0, 2).map((t: string, i: number) => (
                   <span key={i} style={{ padding: '4px 12px', borderRadius: '99px', fontSize: '12px', fontWeight: '500', background: '#F3F3F5', color: '#6B6B6B' }}>
                     {t.length > 12 ? t.slice(0, 12) + '…' : t}
                   </span>

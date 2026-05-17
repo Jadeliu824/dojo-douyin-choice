@@ -1,11 +1,13 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { TOPICS, SCENARIOS } from '@/lib/prompts';
+import { loadProfile, saveProfile, updateProfile, getCurrentRank, getRankProgress, PlayerProfile, UnlockResult } from '@/lib/ranks';
 import TopicSelection from './TopicSelection';
 import ScenarioSelection from './ScenarioSelection';
 import ChatInterface, { Message } from './ChatInterface';
 import ReviewReport from './ReviewReport';
 import DynamicScenarioConfirm, { DynamicScenario } from './DynamicScenarioConfirm';
+import ProfilePanel from './ProfilePanel';
 
 type FlowState = 'topic' | 'scenario' | 'parsing' | 'dynamic_scenario' | 'chat' | 'review';
 
@@ -16,6 +18,15 @@ export default function FlowManager() {
   const [dynScenario, setDynScenario] = useState<DynamicScenario | null>(null);
   const [history, setHistory] = useState<Message[]>([]);
   const [finalScore, setFinalScore] = useState(50);
+  const [profile, setProfile] = useState<PlayerProfile | null>(null);
+  const [newBadges, setNewBadges] = useState<UnlockResult[]>([]);
+  const [showProfile, setShowProfile] = useState(false);
+  const [sparringMeta, setSparringMeta] = useState<{ initialPressure: number; turnCount: number; lowestScore: number }>({ initialPressure: 5, turnCount: 0, lowestScore: 50 });
+
+  // Load profile on mount
+  useEffect(() => {
+    setProfile(loadProfile());
+  }, []);
 
   const reset = () => { setState('topic'); setTopicId(''); setScenarioId(''); setDynScenario(null); setHistory([]); };
 
@@ -25,15 +36,52 @@ export default function FlowManager() {
       const res = await fetch('/api/parse', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(params) });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
-      setDynScenario(data); setState('dynamic_scenario');
+      setDynScenario({ ...data, initialPressure: data.initialPressure || 5 }); setState('dynamic_scenario');
     } catch (err: any) { alert(err.message || '解析失败'); setState('topic'); }
   };
 
   const currentTopic    = dynScenario ? { title: dynScenario.topicTitle } : TOPICS.find(t => t.id === topicId);
   const scenarioList    = topicId ? (SCENARIOS[topicId as keyof typeof SCENARIOS] || []) : [];
   const currentScenario = dynScenario
-    ? { title: dynScenario.scenarioTitle, opponent: dynScenario.opponentRole, opponentTraits: dynScenario.opponentTraits, knowledgePoints: dynScenario.knowledgePoints }
+    ? { title: dynScenario.scenarioTitle, opponent: dynScenario.opponentRole, opponentTraits: dynScenario.opponentTraits, knowledgePoints: dynScenario.knowledgePoints, initialPressure: dynScenario.initialPressure }
     : scenarioList.find(s => s.id === scenarioId);
+
+  const getInitialPressure = () => {
+    if (dynScenario) return dynScenario.initialPressure || 5;
+    const s = scenarioList.find(s => s.id === scenarioId);
+    return (s as any)?.initialPressure || 5;
+  };
+
+  const getScenarioTitle = () => {
+    if (dynScenario) return dynScenario.scenarioTitle;
+    const s = scenarioList.find(s => s.id === scenarioId);
+    return (s as any)?.title || '';
+  };
+
+  const handleFinished = (msgs: Message[], score: number, meta: { initialPressure: number; turnCount: number; lowestScore: number }) => {
+    setHistory(msgs);
+    setFinalScore(score);
+    setSparringMeta(meta);
+
+    // Update player profile
+    if (profile) {
+      const result = updateProfile(
+        profile,
+        getScenarioTitle(),
+        meta.initialPressure,
+        score,
+        meta.turnCount,
+        meta.lowestScore,
+      );
+      setProfile(result.profile);
+      setNewBadges(result.newBadges);
+    }
+
+    setState('review');
+  };
+
+  const rank = profile ? getCurrentRank(profile.xp) : null;
+  const rankProgress = profile ? getRankProgress(profile.xp) : null;
 
   return (
     <div style={{ maxWidth: '540px', margin: '0 auto', minHeight: '100vh', background: '#FFFFFF' }}>
@@ -45,18 +93,42 @@ export default function FlowManager() {
               <h1 onClick={reset} style={{ fontSize: '32px', fontWeight: '900', color: '#111', letterSpacing: '-1px', margin: 0, cursor: 'pointer' }}>Dojo</h1>
               <div style={{ background: '#000', color: '#FFF', padding: '2px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>抖音精选</div>
             </div>
-            <div style={{ width: '40px', height: '40px', borderRadius: '14px', background: '#F0F0F0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#9FE050' }} />
+            <div
+              onClick={() => setShowProfile(true)}
+              style={{ width: '40px', height: '40px', borderRadius: '14px', background: '#F0F0F0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative', transition: 'background 0.15s' }}
+            >
+              {profile && rank ? (
+                <span style={{ fontSize: '20px', lineHeight: 1 }}>{rank.id === 'rookie' ? '🥋' : '🎴'}</span>
+              ) : (
+                <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#9FE050' }} />
+              )}
+              {profile && profile.unlockedBadges.length > 0 && (
+                <div style={{ position: 'absolute', top: -2, right: -2, width: '14px', height: '14px', borderRadius: '50%', background: '#9FE050', fontSize: '8px', fontWeight: '800', color: '#2B5200', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid #FFF' }}>
+                  {profile.unlockedBadges.length}
+                </div>
+              )}
             </div>
           </div>
-          <p style={{ fontSize: '14px', color: '#6B6B6B', fontWeight: '600', margin: 0 }}>内容重构：开口才算学会</p>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <p style={{ fontSize: '14px', color: '#6B6B6B', fontWeight: '600', margin: 0 }}>内容重构：开口才算学会</p>
+            {rank && (
+              <span style={{ fontSize: '12px', fontWeight: '700', color: '#6B6B6B', margin: 0 }}>
+                {rank.title}
+              </span>
+            )}
+          </div>
         </header>
+      )}
+
+      {/* Profile Panel */}
+      {showProfile && profile && (
+        <ProfilePanel profile={profile} onClose={() => setShowProfile(false)} />
       )}
 
       {/* Main Content Area */}
       <div style={{ paddingBottom: (state === 'chat' || state === 'review') ? '0' : '40px' }}>
         {state === 'topic' && <TopicSelection onSelect={id => { setTopicId(id); setDynScenario(null); setState('scenario'); }} onParse={handleParse} />}
-        
+
         {state === 'parsing' && (
           <div style={{ padding: '100px 20px', textAlign: 'center' }}>
             <div style={{ width: '40px', height: '40px', borderRadius: '50%', border: '3px solid #F0F0F0', borderTopColor: '#9FE050', animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} />
@@ -81,8 +153,9 @@ export default function FlowManager() {
             opponentRole={(currentScenario as any).opponent}
             opponentTraits={(currentScenario as any).opponentTraits}
             knowledgePoints={(currentScenario as any).knowledgePoints}
+            initialPressure={getInitialPressure()}
             onBack={() => setState('scenario')}
-            onFinished={(msgs, score) => { setHistory(msgs); setFinalScore(score); setState('review'); }}
+            onFinished={handleFinished}
           />
         )}
 
@@ -93,8 +166,9 @@ export default function FlowManager() {
             isDynamic={!!dynScenario}
             finalScore={finalScore}
             knowledgePoints={(currentScenario as any)?.knowledgePoints}
-            onRestart={() => { setHistory([]); setState('chat'); }}
-            onChangeScenario={() => setState('topic')}
+            onRestart={() => { setHistory([]); setNewBadges([]); setState('chat'); }}
+            onChangeScenario={() => { setNewBadges([]); setState('topic'); }}
+            newBadges={newBadges}
           />
         )}
       </div>

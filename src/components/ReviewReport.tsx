@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { RotateCcw, LayoutGrid, CheckCircle, AlertCircle, Star, AlertTriangle, Lightbulb, Award } from 'lucide-react';
 import { Message } from './ChatInterface';
+import { UnlockResult } from '@/lib/ranks';
 
 interface ReviewReportProps {
   topicId: string;
@@ -11,11 +12,59 @@ interface ReviewReportProps {
   knowledgePoints?: string[];
   onRestart: () => void;
   onChangeScenario: () => void;
+  newBadges?: UnlockResult[];
 }
 
-export default function ReviewReport({ topicId, messages, isDynamic, finalScore, knowledgePoints, onRestart, onChangeScenario }: ReviewReportProps) {
+/* ── Badge Unlock Celebration ── */
+function BadgeCelebration({ badges, onDone }: { badges: UnlockResult[]; onDone: () => void }) {
+  const [visible, setVisible] = useState(true);
+  const [showContent, setShowContent] = useState(false);
+
+  useEffect(() => {
+    const t1 = setTimeout(() => setShowContent(true), 100);
+    const t2 = setTimeout(() => { setVisible(false); onDone(); }, 3500);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, []);
+
+  if (!visible) return null;
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.6)', animation: 'badgeFadeIn 0.3s ease' }}>
+      <div style={{ textAlign: 'center', transform: showContent ? 'scale(1)' : 'scale(0.5)', transition: 'transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)' }}>
+        <div style={{ fontSize: '64px', marginBottom: '12px', animation: 'badgeBounce 1s ease infinite' }}>
+          {badges[0]?.badge.icon || '🏆'}
+        </div>
+        <div style={{ fontSize: '14px', fontWeight: '700', color: '#9FE050', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '6px' }}>
+          新徽章解锁
+        </div>
+        {badges.map(b => (
+          <div key={b.badgeId} style={{ marginBottom: '4px' }}>
+            <div style={{ fontSize: '24px', fontWeight: '900', color: '#FFF', marginBottom: '4px' }}>
+              {b.badge.title}
+            </div>
+            <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.7)', fontWeight: '500' }}>
+              {b.badge.desc}
+            </div>
+          </div>
+        ))}
+        {badges.length > 1 && (
+          <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', marginTop: '8px' }}>
+            共解锁 {badges.length} 个徽章
+          </div>
+        )}
+      </div>
+      <style>{`
+        @keyframes badgeFadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes badgeBounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+      `}</style>
+    </div>
+  );
+}
+
+export default function ReviewReport({ topicId, messages, isDynamic, finalScore, knowledgePoints, onRestart, onChangeScenario, newBadges }: ReviewReportProps) {
   const [report, setReport] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showCelebration, setShowCelebration] = useState(true);
 
   const isSuccess = finalScore >= 80;
   const scoreColor = isSuccess ? '#3A7000' : finalScore <= 25 ? '#CC0000' : '#004499';
@@ -43,6 +92,11 @@ export default function ReviewReport({ topicId, messages, isDynamic, finalScore,
       finally { setIsLoading(false); }
     })();
   }, []);
+
+  /* ── Badge celebration overlay ── */
+  if (newBadges && newBadges.length > 0 && showCelebration) {
+    return <BadgeCelebration badges={newBadges} onDone={() => setShowCelebration(false)} />;
+  }
 
   if (isLoading) {
     return (
