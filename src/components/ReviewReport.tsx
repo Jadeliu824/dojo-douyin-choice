@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { RotateCcw, LayoutGrid, CheckCircle, AlertCircle, Star, AlertTriangle, Lightbulb } from 'lucide-react';
+import { RotateCcw, LayoutGrid, CheckCircle, AlertCircle, Star, AlertTriangle, Lightbulb, Award } from 'lucide-react';
 import { Message } from './ChatInterface';
 
 interface ReviewReportProps {
@@ -160,6 +160,28 @@ export default function ReviewReport({ topicId, messages, isDynamic, finalScore,
                 下次遇到类似情况，直接用这句试试。
               </div>
             </div>
+
+            {/* ── Gold Standard ── */}
+            {report?.goldStandard?.reply && (
+              <div style={{ background: '#FFF', borderRadius: '20px', border: '2px solid #FFD700', padding: '18px 16px', marginBottom: '10px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '12px', background: '#FFF8E1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Award size={18} color="#B8860B" />
+                  </div>
+                  <span style={{ fontSize: '15px', fontWeight: '800', color: '#8B6914' }}>🥇 高手金牌示范</span>
+                </div>
+                <div style={{ background: '#FFFDE7', borderRadius: '14px', padding: '14px', marginBottom: '10px', border: '1px solid #FFD700' }}>
+                  <div style={{ fontSize: '16px', fontWeight: '700', color: '#8B6914', lineHeight: '1.55' }}>
+                    “{report.goldStandard.reply}”
+                  </div>
+                </div>
+                {report.goldStandard.explanation && (
+                  <div style={{ fontSize: '13px', color: '#8B6914', fontWeight: '500', lineHeight: '1.55', padding: '10px 0 0', borderTop: '1px solid rgba(255,215,0,0.3)' }}>
+                    {report.goldStandard.explanation}
+                  </div>
+                )}
+              </div>
+            )}
           </>
         )}
       </div>
