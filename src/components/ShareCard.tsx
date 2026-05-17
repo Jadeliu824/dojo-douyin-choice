@@ -27,93 +27,118 @@ export default function ShareCard({ score, opponentRole, goldPhrase, scenarioTit
     const w = CANVAS_W;
     const h = CANVAS_H;
 
-    // Background
-    ctx.fillStyle = '#111111';
+    // ── Background ──
+    ctx.fillStyle = '#FFFFFF';
     ctx.fillRect(0, 0, w, h);
 
-    // Decorative top gradient
-    const grad = ctx.createLinearGradient(0, 0, w, 0);
-    grad.addColorStop(0, '#9FE050');
-    grad.addColorStop(1, '#7BC040');
-    ctx.fillStyle = grad;
+    // ── Top decorative band ──
+    const bandGrad = ctx.createLinearGradient(0, 0, w, 0);
+    bandGrad.addColorStop(0, '#D4F5A2');
+    bandGrad.addColorStop(0.3, '#C2F0E8');
+    bandGrad.addColorStop(0.6, '#C8E6FF');
+    bandGrad.addColorStop(1, '#E8D8FF');
+    ctx.fillStyle = bandGrad;
     ctx.beginPath();
-    ctx.roundRect(0, 0, w, 6, [0, 0, 0, 0]);
+    ctx.roundRect(0, 0, w, 8, [0, 0, 0, 0]);
     ctx.fill();
 
-    // Brand
-    ctx.fillStyle = '#9FE050';
-    ctx.font = 'bold 22px -apple-system, "SF Pro Display", sans-serif';
-    ctx.fillText('🎬 练练', 30, 58);
+    // ── Brand ──
+    ctx.fillStyle = '#111111';
+    ctx.font = 'bold 26px -apple-system, "SF Pro Display", sans-serif';
+    ctx.fillText('Dojo', 36, 62);
 
-    ctx.fillStyle = 'rgba(255,255,255,0.4)';
-    ctx.font = '13px -apple-system, sans-serif';
-    ctx.fillText('从视频到本能', 30, 82);
+    ctx.fillStyle = '#6B6B6B';
+    ctx.font = '500 13px -apple-system, sans-serif';
+    ctx.fillText('开口才算学会', 36, 86);
 
-    // Score circle
+    // ── Score circle ──
     const scoreCx = w / 2;
-    const scoreCy = 210;
-    const scoreR = 72;
+    const scoreCy = 200;
+    const scoreR = 70;
 
+    // Outer ring background
     ctx.beginPath();
     ctx.arc(scoreCx, scoreCy, scoreR, 0, Math.PI * 2);
-    ctx.fillStyle = isSuccess ? 'rgba(159,224,80,0.15)' : 'rgba(255,77,77,0.15)';
+    ctx.fillStyle = isSuccess ? '#F0FAE6' : '#FFF0F0';
     ctx.fill();
 
+    // Score arc
     ctx.beginPath();
-    ctx.arc(scoreCx, scoreCy, scoreR - 4, -Math.PI / 2, -Math.PI / 2 + (Math.PI * 2 * score) / 100);
-    ctx.strokeStyle = isSuccess ? '#9FE050' : '#FF6B6B';
-    ctx.lineWidth = 6;
+    ctx.arc(scoreCx, scoreCy, scoreR - 4, -Math.PI / 2, -Math.PI / 2 + (Math.PI * 2 * Math.min(score, 100)) / 100);
+    ctx.strokeStyle = isSuccess ? '#9FE050' : '#FFB0B0';
+    ctx.lineWidth = 8;
     ctx.lineCap = 'round';
     ctx.stroke();
 
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = 'bold 52px -apple-system, sans-serif';
+    // Score number
+    ctx.fillStyle = '#111111';
+    ctx.font = 'bold 56px -apple-system, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(String(score), scoreCx, scoreCy + 16);
+    ctx.textBaseline = 'middle';
+    ctx.fillText(String(score), scoreCx, scoreCy - 2);
 
-    ctx.fillStyle = 'rgba(255,255,255,0.4)';
-    ctx.font = '14px -apple-system, sans-serif';
-    ctx.fillText('沟通顺畅度', scoreCx, scoreCy + 50);
+    ctx.fillStyle = '#ADADAD';
+    ctx.font = '500 13px -apple-system, sans-serif';
+    ctx.fillText('沟通顺畅度', scoreCx, scoreCy + 44);
+    ctx.textBaseline = 'alphabetic';
+
+    // ── Result badge ──
+    const badgeY = 298;
+    const badgeColors = isSuccess
+      ? { bg: '#D4F5A2', text: '#3A7000', label: '✅ 对练成功' }
+      : { bg: '#FFD6D6', text: '#CC0000', label: '💔 谈崩了' };
+
+    ctx.textAlign = 'center';
+    ctx.font = 'bold 16px -apple-system, sans-serif';
+    const badgeText = badgeColors.label;
+    const badgeW = ctx.measureText(badgeText).width + 32;
+    ctx.fillStyle = badgeColors.bg;
+    ctx.beginPath();
+    ctx.roundRect(scoreCx - badgeW / 2, badgeY - 14, badgeW, 32, 99);
+    ctx.fill();
+
+    ctx.fillStyle = badgeColors.text;
+    ctx.fillText(badgeText, scoreCx, badgeY + 6);
     ctx.textAlign = 'left';
 
-    // Status
-    ctx.fillStyle = isSuccess ? '#9FE050' : '#FF6B6B';
-    ctx.font = 'bold 28px -apple-system, sans-serif';
+    // ── Opponent & Scenario ──
+    ctx.fillStyle = '#6B6B6B';
+    ctx.font = '500 14px -apple-system, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(isSuccess ? '✅ 对练成功' : '💔 谈崩了', w / 2, 320);
-    ctx.textAlign = 'left';
-
-    // Opponent
-    ctx.fillStyle = 'rgba(255,255,255,0.5)';
-    ctx.font = '14px -apple-system, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(`对手：${opponentRole}`, w / 2, 355);
+    ctx.fillText(`对手：${opponentRole || '未知'}`, scoreCx, 360);
     if (scenarioTitle) {
-      ctx.fillText(scenarioTitle.length > 30 ? scenarioTitle.slice(0, 30) + '...' : scenarioTitle, w / 2, 378);
+      ctx.font = '500 13px -apple-system, sans-serif';
+      ctx.fillStyle = '#ADADAD';
+      ctx.fillText(scenarioTitle.length > 30 ? scenarioTitle.slice(0, 30) + '...' : scenarioTitle, scoreCx, 384);
     }
     ctx.textAlign = 'left';
 
-    // Gold phrase
+    // ── Gold phrase card ──
     if (goldPhrase) {
-      const phraseY = 440;
-      ctx.fillStyle = 'rgba(255,215,0,0.2)';
+      const cardY = 422;
+      ctx.fillStyle = '#FFF8E1';
       ctx.beginPath();
-      ctx.roundRect(40, phraseY - 10, w - 80, 90, 16);
+      ctx.roundRect(36, cardY, w - 72, 110, 16);
       ctx.fill();
 
-      ctx.fillStyle = '#FFD700';
-      ctx.font = 'bold 13px -apple-system, sans-serif';
-      ctx.fillText('🥇 金牌示范', 60, phraseY + 12);
+      ctx.strokeStyle = 'rgba(255,215,0,0.3)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.roundRect(36, cardY, w - 72, 110, 16);
+      ctx.stroke();
 
-      ctx.fillStyle = 'rgba(255,255,255,0.85)';
-      ctx.font = '17px -apple-system, sans-serif';
+      ctx.fillStyle = '#8B6914';
+      ctx.font = 'bold 12px -apple-system, sans-serif';
+      ctx.fillText('🥇 金牌示范', 56, cardY + 24);
 
-      // Word wrap for phrase
-      const maxWidth = w - 120;
-      const words = goldPhrase;
+      // Word wrap
+      const maxWidth = w - 124;
+      ctx.fillStyle = '#6B5B00';
+      ctx.font = '500 15px -apple-system, sans-serif';
+      const chars = goldPhrase.split('');
       const lines: string[] = [];
       let line = '';
-      for (const ch of words) {
+      for (const ch of chars) {
         const test = line + ch;
         if (ctx.measureText(test).width > maxWidth) {
           lines.push(line);
@@ -124,31 +149,35 @@ export default function ShareCard({ score, opponentRole, goldPhrase, scenarioTit
       }
       if (line) lines.push(line);
 
-      let ly = phraseY + 42;
+      let ly = cardY + 52;
       for (const l of lines) {
-        ctx.fillText(`“${l}”`, 60, ly);
-        ly += 26;
+        ctx.fillText(`“${l}”`, 56, ly);
+        ly += 28;
       }
     }
 
-    // Divider
-    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+    // ── Divider ──
+    const dividerY = goldPhrase ? 578 : 470;
+    ctx.strokeStyle = '#F0F0F0';
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(40, 600);
-    ctx.lineTo(w - 40, 600);
+    ctx.moveTo(36, dividerY);
+    ctx.lineTo(w - 36, dividerY);
     ctx.stroke();
 
-    // Footer
-    ctx.fillStyle = 'rgba(255,255,255,0.3)';
-    ctx.font = '12px -apple-system, sans-serif';
+    // ── Footer ──
+    ctx.fillStyle = '#111111';
+    ctx.font = 'bold 15px -apple-system, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('🎬 练练 — 你的视频搭子', w / 2, 640);
-    ctx.fillText('让视频里的技巧，变成你身上的本能', w / 2, 662);
+    ctx.fillText('Dojo · 开口才算学会', w / 2, dividerY + 44);
 
-    ctx.fillStyle = 'rgba(255,255,255,0.15)';
-    ctx.font = '11px -apple-system, sans-serif';
-    ctx.fillText('sparring-ground.vercel.app', w / 2, 695);
+    ctx.fillStyle = '#ADADAD';
+    ctx.font = '500 12px -apple-system, sans-serif';
+    ctx.fillText('在对话中成长，在实战中精进', w / 2, dividerY + 70);
+
+    ctx.fillStyle = '#D4D4D4';
+    ctx.font = '500 11px -apple-system, sans-serif';
+    ctx.fillText('dojo-douyin.vercel.app', w / 2, dividerY + 96);
     ctx.textAlign = 'left';
   };
 
@@ -156,18 +185,19 @@ export default function ShareCard({ score, opponentRole, goldPhrase, scenarioTit
     <div style={{
       position: 'fixed', inset: 0, zIndex: 300,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: 'rgba(0,0,0,0.7)', padding: '20px',
+      background: 'rgba(0,0,0,0.5)', padding: '20px',
       animation: 'fadeIn 0.2s ease',
     }}>
       <div style={{
-        background: '#FFF', borderRadius: '24px', padding: '20px',
-        maxWidth: '400px', width: '100%',
+        background: '#FFF', borderRadius: '20px', padding: '20px',
+        maxWidth: '380px', width: '100%',
         display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px',
+        boxShadow: '0 20px 60px rgba(0,0,0,0.15)',
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-          <span style={{ fontSize: '16px', fontWeight: '800', color: '#111' }}>分享你的战绩</span>
+          <span style={{ fontSize: '17px', fontWeight: '800', color: '#111' }}>分享战绩</span>
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }}>
-            <X size={20} color="#6B6B6B" />
+            <X size={20} color="#ADADAD" />
           </button>
         </div>
 
@@ -175,7 +205,7 @@ export default function ShareCard({ score, opponentRole, goldPhrase, scenarioTit
           ref={canvasRef}
           width={CANVAS_W}
           height={CANVAS_H}
-          style={{ width: '100%', height: 'auto', borderRadius: '16px', display: 'block' }}
+          style={{ width: '100%', height: 'auto', borderRadius: '14px', display: 'block' }}
           onLoad={drawCard}
         />
 
@@ -192,7 +222,6 @@ export default function ShareCard({ score, opponentRole, goldPhrase, scenarioTit
                 setCopied(true);
                 setTimeout(() => setCopied(false), 2000);
               }).catch(() => {
-                // Fallback: download
                 const a = document.createElement('a');
                 a.href = canvas.toDataURL();
                 a.download = 'dojo-share.png';
@@ -210,11 +239,11 @@ export default function ShareCard({ score, opponentRole, goldPhrase, scenarioTit
           }}
         >
           {copied ? <Check size={18} /> : <Share2 size={18} />}
-          {copied ? '已复制到剪贴板' : '复制图片到剪贴板'}
+          {copied ? '已复制到剪贴板' : '复制图片'}
         </button>
 
         <div style={{ fontSize: '12px', color: '#ADADAD', fontWeight: '500', textAlign: 'center' }}>
-          将图片粘贴到朋友圈、小红书或微信群分享
+          可直接粘贴到朋友圈、小红书分享
         </div>
       </div>
     </div>
