@@ -29,8 +29,10 @@ export default function ChatInterface({
   const [scoreDiff, setScoreDiff] = useState<number | null>(null);
   const [isForcedFinished, setIsForcedFinished] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [isShaking, setIsShaking] = useState(false);
   const recognitionRef = useRef<any>(null);
-  
+  const audioCtxRef = useRef<AudioContext | null>(null);
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const isComplete = softnessScore >= 90 || softnessScore <= 10 || isForcedFinished;
 
@@ -75,6 +77,48 @@ export default function ChatInterface({
       }
     };
   }, []);
+
+  const getAudioContext = () => {
+    if (!audioCtxRef.current) {
+      audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+    }
+    return audioCtxRef.current;
+  };
+
+  const playScoreSound = (diff: number) => {
+    try {
+      const ctx = getAudioContext();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      gain.gain.value = 0.08; // subtle volume
+      if (diff > 0) {
+        osc.frequency.value = 1200;
+        osc.type = 'sine';
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.15);
+      } else {
+        osc.frequency.value = 200;
+        osc.type = 'sawtooth';
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.25);
+      }
+    } catch (e) {
+      // Audio not supported, silently ignore
+    }
+  };
+
+  const handleScoreChange = (diff: number) => {
+    setScoreDiff(diff);
+    if (diff !== 0) {
+      playScoreSound(diff);
+      setIsShaking(true);
+      setTimeout(() => setIsShaking(false), 600);
+    }
+  };
 
   const toggleListening = () => {
     if (!recognitionRef.current) {
@@ -171,7 +215,7 @@ export default function ChatInterface({
       if (data.softnessScore !== undefined) {
         const newScore = Number(data.softnessScore);
         const diff = newScore - softnessScore;
-        setScoreDiff(diff);
+        handleScoreChange(diff);
         setSoftnessScore(newScore);
       }
       if (data.isFinished) {
@@ -222,7 +266,7 @@ export default function ChatInterface({
 
         {/* Progress Bar & Stats */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '0 4px' }}>
-          <div style={{ flex: 1, height: '6px', background: '#F0F0F0', borderRadius: '99px', overflow: 'hidden' }}>
+          <div className={isShaking ? 'shake' : ''} style={{ flex: 1, height: '6px', background: '#F0F0F0', borderRadius: '99px', overflow: 'hidden' }}>
             <div style={{ width: `${softnessScore}%`, height: '100%', background: barColor, borderRadius: '99px', transition: 'width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)' }} />
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -357,6 +401,18 @@ export default function ChatInterface({
           0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 77, 77, 0.7); }
           70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(255, 77, 77, 0); }
           100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 77, 77, 0); }
+        }
+        .shake {
+          animation: shake-bar 0.5s ease-in-out;
+        }
+        @keyframes shake-bar {
+          0%, 100% { transform: translateX(0); }
+          15% { transform: translateX(-2px); }
+          30% { transform: translateX(2px); }
+          45% { transform: translateX(-1px); }
+          60% { transform: translateX(1px); }
+          75% { transform: translateX(-0.5px); }
+          90% { transform: translateX(0.5px); }
         }
       `}</style>
     </div>
