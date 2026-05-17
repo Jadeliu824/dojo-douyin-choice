@@ -166,6 +166,8 @@ export default function FlowManager() {
             isDynamic={!!dynScenario}
             finalScore={finalScore}
             knowledgePoints={(currentScenario as any)?.knowledgePoints}
+            opponentRole={(currentScenario as any)?.opponent}
+            scenarioTitle={(currentScenario as any)?.title}
             onRestart={() => { setHistory([]); setNewBadges([]); setState('chat'); }}
             onChangeScenario={() => { setNewBadges([]); setState('topic'); }}
             newBadges={newBadges}

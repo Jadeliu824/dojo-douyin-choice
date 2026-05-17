@@ -1,8 +1,10 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { RotateCcw, LayoutGrid, CheckCircle, AlertCircle, Star, AlertTriangle, Lightbulb, Award } from 'lucide-react';
+import { RotateCcw, LayoutGrid, CheckCircle, AlertCircle, Star, AlertTriangle, Lightbulb, Award, Share2, BarChart3 } from 'lucide-react';
 import { Message } from './ChatInterface';
 import { UnlockResult } from '@/lib/ranks';
+import RadarChart, { calcRadarScores } from './RadarChart';
+import ShareCard from './ShareCard';
 
 interface ReviewReportProps {
   topicId: string;
@@ -10,6 +12,8 @@ interface ReviewReportProps {
   isDynamic: boolean;
   finalScore: number;
   knowledgePoints?: string[];
+  opponentRole?: string;
+  scenarioTitle?: string;
   onRestart: () => void;
   onChangeScenario: () => void;
   newBadges?: UnlockResult[];
@@ -61,10 +65,18 @@ function BadgeCelebration({ badges, onDone }: { badges: UnlockResult[]; onDone: 
   );
 }
 
-export default function ReviewReport({ topicId, messages, isDynamic, finalScore, knowledgePoints, onRestart, onChangeScenario, newBadges }: ReviewReportProps) {
+export default function ReviewReport({ topicId, messages, isDynamic, finalScore, knowledgePoints, opponentRole, scenarioTitle, onRestart, onChangeScenario, newBadges }: ReviewReportProps) {
   const [report, setReport] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showCelebration, setShowCelebration] = useState(true);
+  const [showShare, setShowShare] = useState(false);
+  const [radarScores, setRadarScores] = useState<Record<string, number>>({
+    empathy: 50, boundary: 50, eq: 50, clarity: 50, constructive: 50,
+  });
+
+  useEffect(() => {
+    setRadarScores(calcRadarScores(finalScore, knowledgePoints));
+  }, [finalScore]);
 
   const isSuccess = finalScore >= 80;
   const scoreColor = isSuccess ? '#3A7000' : finalScore <= 25 ? '#CC0000' : '#004499';
@@ -167,6 +179,16 @@ export default function ReviewReport({ topicId, messages, isDynamic, finalScore,
         </div>
       </div>
 
+      {/* ── Radar Chart ── */}
+      <div style={{ padding: '20px 20px 4px' }}>
+        <div style={{ fontSize: '11px', fontWeight: '700', color: '#ADADAD', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <BarChart3 size={14} /> 能力雷达
+        </div>
+        <div style={{ background: '#FFF', borderRadius: '20px', border: '1.5px solid rgba(0,0,0,0.06)', padding: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <RadarChart scores={radarScores} size={200} />
+        </div>
+      </div>
+
       <div style={{ padding: '24px 20px 10px', fontSize: '11px', fontWeight: '700', color: '#ADADAD', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
         教练深度点评
       </div>
@@ -257,6 +279,34 @@ export default function ReviewReport({ topicId, messages, isDynamic, finalScore,
             ))}
           </div>
         </div>
+      )}
+
+      {/* ── Share Button ── */}
+      <div style={{ padding: '12px 16px 0' }}>
+        <button
+          onClick={() => setShowShare(true)}
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+            width: '100%', padding: '14px', borderRadius: '99px',
+            border: '1.5px solid rgba(0,0,0,0.10)', background: '#FFF',
+            color: '#444', fontSize: '14px', fontWeight: '700', cursor: 'pointer',
+            transition: 'all 0.15s',
+          }}
+        >
+          <Share2 size={16} /> 分享你的战绩
+        </button>
+      </div>
+
+      {/* ── Share Card Modal ── */}
+      {showShare && (
+        <ShareCard
+          score={finalScore}
+          opponentRole={opponentRole || ''}
+          goldPhrase={report?.goldStandard?.reply || report?.nextTime?.phrase}
+          scenarioTitle={scenarioTitle || ''}
+          isSuccess={isSuccess}
+          onClose={() => setShowShare(false)}
+        />
       )}
 
       <div style={{ padding: '8px 16px', display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '16px' }}>
