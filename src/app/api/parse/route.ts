@@ -12,29 +12,33 @@ const MOBILE_UA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleW
 
 export async function POST(req: Request) {
   try {
-    const { url } = await req.json();
+    const { url, text } = await req.json();
 
-    if (!url) {
-      return NextResponse.json({ error: '请输入有效的链接' }, { status: 400 });
+    if (!url && !text) {
+      return NextResponse.json({ error: '请输入有效的链接或视频总结/文案' }, { status: 400 });
     }
 
     let scrapedContent = '';
-    try {
-      const jinaRes = await fetch(`https://r.jina.ai/${url}`, {
-        headers: {
-          'X-Return-Format': 'markdown',
-          'User-Agent': MOBILE_UA
+    if (text) {
+      scrapedContent = text;
+    } else if (url) {
+      try {
+        const jinaRes = await fetch(`https://r.jina.ai/${url}`, {
+          headers: {
+            'X-Return-Format': 'markdown',
+            'User-Agent': MOBILE_UA
+          }
+        });
+        if (jinaRes.ok) {
+          scrapedContent = await jinaRes.text();
         }
-      });
-      if (jinaRes.ok) {
-        scrapedContent = await jinaRes.text();
+      } catch (e) {
+        console.warn("Scraping failed:", e);
       }
-    } catch (e) {
-      console.warn("Scraping failed:", e);
-    }
 
-    if (!scrapedContent || scrapedContent.length < 50) {
-       scrapedContent = `Content URL: ${url}`;
+      if (!scrapedContent || scrapedContent.length < 50) {
+         scrapedContent = `Content URL: ${url}`;
+      }
     }
 
     const systemPrompt = `你是一个抖音精选内容重构专家。

@@ -1,6 +1,6 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
-import { Send, ChevronLeft, Bot, User, ArrowRight } from 'lucide-react';
+import { Send, ChevronLeft, Bot, User, ArrowRight, Mic } from 'lucide-react';
 
 export interface Message {
   role: 'user' | 'assistant';
@@ -28,9 +28,71 @@ export default function ChatInterface({
   const [softnessScore, setSoftnessScore] = useState(50);
   const [scoreDiff, setScoreDiff] = useState<number | null>(null);
   const [isForcedFinished, setIsForcedFinished] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<any>(null);
   
   const scrollRef = useRef<HTMLDivElement>(null);
   const isComplete = softnessScore >= 90 || softnessScore <= 10 || isForcedFinished;
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        const recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = true;
+        recognition.lang = 'zh-CN';
+
+        recognition.onstart = () => {
+          setIsListening(true);
+        };
+
+        recognition.onresult = (event: any) => {
+          const result = event.results[event.results.length - 1];
+          if (result && result[0]) {
+            setInput(result[0].transcript);
+          }
+        };
+
+        recognition.onerror = (event: any) => {
+          console.error('Speech recognition error:', event.error);
+          if (event.error === 'not-allowed') {
+            alert('请允许使用麦克风以启用语音输入功能');
+          }
+          setIsListening(false);
+        };
+
+        recognition.onend = () => {
+          setIsListening(false);
+        };
+
+        recognitionRef.current = recognition;
+      }
+    }
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.abort();
+      }
+    };
+  }, []);
+
+  const toggleListening = () => {
+    if (!recognitionRef.current) {
+      alert('您的浏览器暂不支持语音识别功能，请尝试使用 Chrome 或 Safari 浏览器');
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current.stop();
+    } else {
+      setInput('');
+      try {
+        recognitionRef.current.start();
+      } catch (err) {
+        console.error('Start recognition failed:', err);
+      }
+    }
+  };
 
   // Make opponent speak first
   useEffect(() => {
@@ -73,6 +135,11 @@ export default function ChatInterface({
 
   const handleSend = async () => {
     if (!input.trim() || isTyping || isComplete) return;
+
+    if (isListening && recognitionRef.current) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    }
 
     const userMsg: Message = { role: 'user', content: input };
     const currentHistory = [...messages, userMsg];
@@ -217,19 +284,61 @@ export default function ChatInterface({
             完成对练，查看复盘报告 <ArrowRight size={20} />
           </button>
         ) : (
-          <div style={{ display: 'flex', gap: '10px' }}>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+            <button
+              type="button"
+              onClick={toggleListening}
+              style={{
+                width: '50px',
+                height: '50px',
+                borderRadius: '50%',
+                border: 'none',
+                background: isListening ? '#FF4D4D' : '#E8D8FF',
+                color: isListening ? '#FFF' : '#9B7BC0',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                cursor: 'pointer',
+                boxShadow: isListening ? '0 0 15px rgba(255, 77, 77, 0.5)' : 'none',
+                animation: isListening ? 'pulse-glow 1.5s infinite' : 'none'
+              }}
+            >
+              <Mic size={22} />
+            </button>
             <input
               type="text"
-              placeholder="输入你的回复..."
+              placeholder={isListening ? "正在聆听，请开口说话..." : "输入或点击左侧语音说话..."}
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSend()}
-              style={{ flex: 1, padding: '14px 18px', borderRadius: '99px', border: 'none', background: '#F0F0F0', fontSize: '15px', outline: 'none' }}
+              style={{
+                flex: 1,
+                padding: '14px 18px',
+                borderRadius: '99px',
+                border: isListening ? '1.5px solid #FF4D4D' : 'none',
+                background: isListening ? '#FFF5F5' : '#F0F0F0',
+                fontSize: '15px',
+                outline: 'none',
+                transition: 'all 0.3s'
+              }}
             />
             <button
               onClick={handleSend}
               disabled={!input.trim() || isTyping}
-              style={{ width: '50px', height: '50px', borderRadius: '50%', border: 'none', background: input.trim() ? '#9FE050' : '#F0F0F0', color: input.trim() ? '#2B5200' : '#ADADAD', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
+              style={{
+                width: '50px',
+                height: '50px',
+                borderRadius: '50%',
+                border: 'none',
+                background: input.trim() ? '#9FE050' : '#F0F0F0',
+                color: input.trim() ? '#2B5200' : '#ADADAD',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.2s',
+                cursor: input.trim() ? 'pointer' : 'not-allowed'
+              }}
             >
               <Send size={20} />
             </button>
@@ -243,6 +352,11 @@ export default function ChatInterface({
         @keyframes float-up { 
           0% { transform: translateY(0); opacity: 1; }
           100% { transform: translateY(-20px); opacity: 0; }
+        }
+        @keyframes pulse-glow {
+          0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 77, 77, 0.7); }
+          70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(255, 77, 77, 0); }
+          100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 77, 77, 0); }
         }
       `}</style>
     </div>

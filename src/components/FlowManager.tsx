@@ -19,10 +19,10 @@ export default function FlowManager() {
 
   const reset = () => { setState('topic'); setTopicId(''); setScenarioId(''); setDynScenario(null); setHistory([]); };
 
-  const handleParseUrl = async (text: string) => {
+  const handleParse = async (params: { url?: string; text?: string }) => {
     setState('parsing');
     try {
-      const res = await fetch('/api/parse', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: text }) });
+      const res = await fetch('/api/parse', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(params) });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       setDynScenario(data); setState('dynamic_scenario');
@@ -55,7 +55,7 @@ export default function FlowManager() {
 
       {/* Main Content Area */}
       <div style={{ paddingBottom: (state === 'chat' || state === 'review') ? '0' : '40px' }}>
-        {state === 'topic' && <TopicSelection onSelect={id => { setTopicId(id); setDynScenario(null); setState('scenario'); }} onParseUrl={handleParseUrl} />}
+        {state === 'topic' && <TopicSelection onSelect={id => { setTopicId(id); setDynScenario(null); setState('scenario'); }} onParse={handleParse} />}
         
         {state === 'parsing' && (
           <div style={{ padding: '100px 20px', textAlign: 'center' }}>
